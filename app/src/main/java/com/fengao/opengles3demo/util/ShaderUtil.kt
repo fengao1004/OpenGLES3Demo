@@ -19,14 +19,14 @@ object ShaderUtil {
             val compiled = IntArray(1)
             GLES30.glGetShaderiv(shader, GLES30.GL_COMPILE_STATUS, compiled, 0)
             if (compiled[0] == 0) {
-                Log.e("ES20_ERROR", "Could not compile shader $shaderType:")
-                Log.e("ES20_ERROR", "ERROR: " + GLES30.glGetShaderInfoLog(shader))
+                Log.e("ES30_ERROR", "Could not compile shader $shaderType:")
+                Log.e("ES30_ERROR", "ERROR: " + GLES30.glGetShaderInfoLog(shader))
                 GLES30.glDeleteShader(shader)
                 shader = 0
             }
         } else {
             Log.e(
-                "ES20_ERROR", "Could not Create shader " + shaderType + ":" +
+                "ES30_ERROR", "Could not Create shader " + shaderType + ":" +
                         "Error:" + shader
             )
         }
@@ -47,7 +47,7 @@ object ShaderUtil {
     fun checkGLError(op: String) {
         var error: Int
         while (GLES30.glGetError().also { error = it } != GLES30.GL_NO_ERROR) {
-            Log.e("ES20_ERROR", "$op: glError $error")
+            Log.e("ES30_ERROR", "$op: glError $error")
             throw RuntimeException("$op: glError $error")
         }
     }
@@ -74,11 +74,12 @@ object ShaderUtil {
             val linkStatus = IntArray(1)
             GLES30.glGetProgramiv(program, GLES30.GL_LINK_STATUS, linkStatus, 0)
             if (linkStatus[0] != GLES30.GL_TRUE) {
+                Log.e("ES30_ERROR", "ERROR: " + GLES30.glGetProgramInfoLog(program))
                 GLES30.glDeleteProgram(program)
                 program = 0
             }
         } else {
-            Log.e("ES20_ERROR", "glCreateProgram Failed: $program")
+            Log.e("ES30_ERROR", "glCreateProgram Failed: $program")
         }
         return program
     }
@@ -104,45 +105,5 @@ object ShaderUtil {
             e.printStackTrace()
         }
         return result
-    }
-
-
-    fun compileShader(name: String?, type: Int, context: Context): Int {
-        val shaderStr = loadFromAssetsFile(name, context.resources)
-        val shaderId = GLES30.glCreateShader(type)
-        if (shaderId != 0) { //load
-            GLES30.glShaderSource(shaderId, shaderStr)
-            GLES30.glCompileShader(shaderId)
-            val compileStatus = IntArray(1)
-            GLES30.glGetShaderiv(shaderId, GLES30.GL_COMPILE_STATUS, compileStatus, 0)
-            if (compileStatus[0] == 0) {
-                val logInfo = GLES30.glGetShaderInfoLog(shaderId)
-                System.err.println(logInfo)
-                GLES30.glDeleteShader(shaderId)
-                return 0
-            }
-            return shaderId
-        }
-        return 0
-    }
-
-    fun linkProgram(vertexShaderId: Int, fragmentShaderId: Int): Int {
-        val programId = GLES30.glCreateProgram()
-        return if (programId != 0) {
-            GLES30.glAttachShader(programId, vertexShaderId)
-            GLES30.glAttachShader(programId, fragmentShaderId)
-            GLES30.glLinkProgram(programId)
-            val linkStatus = IntArray(1)
-            GLES30.glGetProgramiv(programId, GLES30.GL_LINK_STATUS, linkStatus, 0)
-            if (linkStatus[0] == 0) {
-                val logInfo = GLES30.glGetProgramInfoLog(programId)
-                System.err.println(logInfo)
-                GLES30.glDeleteProgram(programId)
-                return 0
-            }
-            programId
-        } else {
-            0
-        }
     }
 }
